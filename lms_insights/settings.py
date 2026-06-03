@@ -1,6 +1,12 @@
+import logging
 import os
+import warnings
 from pathlib import Path
 import dj_database_url
+from django.core.exceptions import ImproperlyConfigured
+
+logger = logging.getLogger(__name__)
+warnings.simplefilter('default', UserWarning)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -69,35 +75,92 @@ WSGI_APPLICATION = 'lms_insights.wsgi.application'
 postgres_url_non_pooling = os.environ.get('POSTGRES_URL_NON_POOLING')
 postgres_url = os.environ.get('POSTGRES_URL')
 
-if postgres_url_non_pooling:
-    # Prefer non-pooling URL for Django (pooling is for serverless)
-    DATABASES = {
-        'default': dj_database_url.config(
-            default=postgres_url_non_pooling,
+# Normalize Supabase-style connection URLs for psycopg2/dj-database-url.
+def normalize_database_url(database_url: str | None, *, env_name: str | None = None) -> str | None:
+    if not database_url:
+        return None
+    normalized = database_url.strip()
+    if '://' not in normalized:
+        return normalized
+
+    scheme, rest = normalized.split('://', 1)
+    scheme_lower = scheme.lower()
+    if scheme_lower in {'supabase', 'supa', 'postgres'}:
+        normalized = f'postgresql://{rest}'
+        if scheme_lower in {'supabase', 'supa'}:
+            warning_message = (
+                f"Normalized {env_name or 'database'} URL scheme '{scheme_lower}' to 'postgresql://' "
+                "for psycopg2/dj-database-url compatibility."
+            )
+            warnings.warn(warning_message, stacklevel=2)
+            logger.warning(warning_message)
+    return normalized
+
+# Export normalized DB URLs back into the environment so other libraries
+# (or vendor code) that read `os.environ` get the corrected scheme.
+def _export_normalized_db_env_vars() -> None:
+    for key in ('POSTGRES_URL_NON_POOLING', 'POSTGRES_URL', 'DATABASE_URL'):
+        raw = os.environ.get(key)
+        if not raw:
+            continue
+        try:
+            normalized = normalize_database_url(raw, env_name=key)
+        except Exception:
+            # If normalization somehow fails, skip exporting to avoid hiding original errors
+            continue
+        if normalized and normalized != raw:
+            msg = f"Normalized environment {key} to psycopg2-compatible URL."
+            warnings.warn(msg, stacklevel=2)
+            logger.warning(msg)
+            os.environ[key] = normalized
+
+# Run early normalization so any vendor code reading env vars sees corrected URLs.
+_export_normalized_db_env_vars()
+
+# Validate database URL and provide a clear warning/error message.
+def get_database_config(env_url: str | None, env_name: str) -> dict:
+    normalized = normalize_database_url(env_url, env_name=env_name)
+    if not normalized:
+        raise ImproperlyConfigured(
+            f"{env_name} is set but empty or invalid. Please provide a valid PostgreSQL database URL."
+        )
+    try:
+        return dj_database_url.config(
+            default=normalized,
             conn_max_age=600,
             conn_health_checks=True,
         )
+    except Exception as exc:
+        message = (
+            f"Unable to parse {env_name} value. "
+            "Make sure it is a valid PostgreSQL-style connection string. "
+            f"Original error: {exc}"
+        )
+        if DEBUG:
+            warnings.warn(message)
+        raise ImproperlyConfigured(message) from exc
+
+if postgres_url_non_pooling:
+    # Prefer non-pooling URL for Django (pooling is for serverless)
+    logger.info("Using POSTGRES_URL_NON_POOLING for database configuration.")
+    DATABASES = {
+        'default': get_database_config(postgres_url_non_pooling, 'POSTGRES_URL_NON_POOLING')
     }
 elif postgres_url:
     # Fallback to pooling URL if available
+    logger.info("Using POSTGRES_URL for database configuration.")
     DATABASES = {
-        'default': dj_database_url.config(
-            default=postgres_url,
-            conn_max_age=600,
-            conn_health_checks=True,
-        )
+        'default': get_database_config(postgres_url, 'POSTGRES_URL')
     }
 elif os.environ.get('DATABASE_URL'):
     # Alternative: Generic DATABASE_URL support
+    logger.info("Using DATABASE_URL for database configuration.")
     DATABASES = {
-        'default': dj_database_url.config(
-            default=os.environ.get('DATABASE_URL'),
-            conn_max_age=600,
-            conn_health_checks=True,
-        )
+        'default': get_database_config(os.environ.get('DATABASE_URL'), 'DATABASE_URL')
     }
 else:
     # Development: SQLite
+    logger.info("No PostgreSQL URL found; defaulting to local SQLite database.")
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
@@ -170,3 +233,31 @@ AUTH_USER_MODEL = 'analytics.User'
 LOGIN_REDIRECT_URL = 'dashboard'
 LOGOUT_REDIRECT_URL = 'login'
 LOGIN_URL = 'login'
+
+# Logging
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'simple': {
+            'format': '[%(levelname)s] %(message)s',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'WARNING',
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
+}
