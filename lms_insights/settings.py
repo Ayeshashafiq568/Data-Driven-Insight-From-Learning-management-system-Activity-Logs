@@ -8,10 +8,17 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-m&!z*)#e%r7s@m0*k0*&s)v(3r_f(95j8r!x-6p^$n5%g7z%*1')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DEBUG', 'True') == 'True'
+DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
-# In production, set ALLOWED_HOSTS from environment
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+# In production, set ALLOWED_HOSTS from environment.
+# Vercel sets VERCEL_URL and VERCEL in its runtime environment.
+allowed_hosts_env = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1')
+ALLOWED_HOSTS = [host.strip() for host in allowed_hosts_env.split(',') if host.strip()]
+vercel_url = os.environ.get('VERCEL_URL')
+if vercel_url and vercel_url not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(vercel_url)
+if os.environ.get('VERCEL') and '.vercel.app' not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append('.vercel.app')
 
 # Application definition
 INSTALLED_APPS = [
