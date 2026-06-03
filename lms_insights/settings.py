@@ -11,7 +11,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-m&!z*)#e%r7s@m0*k0*&s
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
 # In production, set ALLOWED_HOSTS from environment
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1,data-driven-insight-from-learning-m.vercel.app').split(',')
 
 # Application definition
 INSTALLED_APPS = [
