@@ -1,0 +1,244 @@
+{% extends 'analytics/base.html' %}
+
+{% block title %}Advisor Risk Alerts - LMS Insights{% endblock %}
+{% block page_title %}Advisor Intervention Alerts{% endblock %}
+
+{% block content %}
+
+{% if alerts %}
+<!-- Summary Strip -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card p-3 border-0" style="background: linear-gradient(135deg, rgba(138,31,31,0.08) 0%, rgba(138,31,31,0.04) 100%); border-left: 4px solid #8A1F1F !important; border: 1px solid rgba(138,31,31,0.2);">
+            <div class="d-flex align-items-center gap-3">
+                <div style="width:44px;height:44px;border-radius:10px;background-color:rgba(138,31,31,0.12);display:flex;align-items:center;justify-content:center;">
+                    <i class="fa-solid fa-triangle-exclamation" style="color:#8A1F1F;font-size:1.2rem;"></i>
+                </div>
+                <div>
+                    <div class="fw-bold" style="font-size:1.5rem;color:#8A1F1F;">{{ high_risk_count }}</div>
+                    <div class="text-secondary small fw-semibold text-uppercase" style="letter-spacing:0.5px;">Critical — High Risk</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card p-3 border-0" style="background: linear-gradient(135deg, rgba(158,118,17,0.08) 0%, rgba(158,118,17,0.04) 100%); border-left: 4px solid #9E7611 !important; border: 1px solid rgba(158,118,17,0.2);">
+            <div class="d-flex align-items-center gap-3">
+                <div style="width:44px;height:44px;border-radius:10px;background-color:rgba(158,118,17,0.12);display:flex;align-items:center;justify-content:center;">
+                    <i class="fa-solid fa-circle-exclamation" style="color:#9E7611;font-size:1.2rem;"></i>
+                </div>
+                <div>
+                    <div class="fw-bold" style="font-size:1.5rem;color:#9E7611;">{{ medium_risk_count }}</div>
+                    <div class="text-secondary small fw-semibold text-uppercase" style="letter-spacing:0.5px;">Moderate — Medium Risk</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card p-3 border-0" style="background: linear-gradient(135deg, rgba(0,70,67,0.06) 0%, rgba(0,70,67,0.03) 100%); border-left: 4px solid var(--cyprus) !important; border: 1px solid rgba(0,70,67,0.1);">
+            <div class="d-flex align-items-center gap-3">
+                <div class="metric-icon-bg">
+                    <i class="fa-solid fa-bell"></i>
+                </div>
+                <div>
+                    <div class="fw-bold" style="font-size:1.5rem;color:var(--cyprus);">{{ alerts.count }}</div>
+                    <div class="text-secondary small fw-semibold text-uppercase" style="letter-spacing:0.5px;">Total Active Alerts</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Search & Filter Card -->
+<div class="card border-0 shadow-sm mb-4 animate-fade-in">
+    <div class="card-body p-4" style="background-color: var(--sand-light); border: 1px solid var(--sand-dark); border-radius: var(--border-radius);">
+        <form method="GET" action="{% url 'risk_alerts' %}" class="row g-3 align-items-end">
+            <!-- Search field -->
+            <div class="col-md-3 col-sm-6">
+                <label for="search" class="form-label small fw-bold text-secondary mb-1">
+                    <i class="fa-solid fa-magnifying-glass me-1 text-accent"></i>Search Student
+                </label>
+                <input type="text" name="search" id="search" class="form-control bg-white shadow-sm" placeholder="Name or ID..." value="{{ search_query }}">
+            </div>
+            
+            <!-- Course Selector -->
+            <div class="col-md-2 col-sm-6">
+                <label for="course" class="form-label small fw-bold text-secondary mb-1">
+                    <i class="fa-solid fa-book me-1 text-accent"></i>Course
+                </label>
+                <select name="course" id="course" class="form-select bg-white shadow-sm">
+                    <option value="">All Courses</option>
+                    {% for course in courses %}
+                        <option value="{{ course.id }}" {% if selected_course == course.id|stringformat:"i" %}selected{% endif %}>
+                            {{ course.course_code }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <!-- Risk Level Selector -->
+            <div class="col-md-2 col-sm-6">
+                <label for="risk_level" class="form-label small fw-bold text-secondary mb-1">
+                    <i class="fa-solid fa-triangle-exclamation me-1 text-accent"></i>Risk Level
+                </label>
+                <select name="risk_level" id="risk_level" class="form-select bg-white shadow-sm">
+                    <option value="">All Risks</option>
+                    <option value="High Risk" {% if selected_risk == "High Risk" %}selected{% endif %}>High Risk</option>
+                    <option value="Medium Risk" {% if selected_risk == "Medium Risk" %}selected{% endif %}>Medium Risk</option>
+                </select>
+            </div>
+            
+            <!-- Max Engagement Threshold -->
+            <div class="col-md-2 col-sm-6">
+                <label for="max_engagement" class="form-label small fw-bold text-secondary mb-1">
+                    <i class="fa-solid fa-gauge-simple-high me-1 text-accent"></i>Max Engagement
+                </label>
+                <select name="max_engagement" id="max_engagement" class="form-select bg-white shadow-sm">
+                    <option value="">Any Score</option>
+                    <option value="30" {% if selected_max_engagement == "30" %}selected{% endif %}>&le; 30%</option>
+                    <option value="50" {% if selected_max_engagement == "50" %}selected{% endif %}>&le; 50%</option>
+                    <option value="70" {% if selected_max_engagement == "70" %}selected{% endif %}>&le; 70%</option>
+                </select>
+            </div>
+
+            <!-- Sorting Select -->
+            <div class="col-md-2 col-sm-6">
+                <label for="sort_by" class="form-label small fw-bold text-secondary mb-1">
+                    <i class="fa-solid fa-arrow-down-wide-short me-1 text-accent"></i>Sort By
+                </label>
+                <select name="sort_by" id="sort_by" class="form-select bg-white shadow-sm">
+                    <option value="" {% if not selected_sort %}selected{% endif %}>Critical First</option>
+                    <option value="engagement_asc" {% if selected_sort == "engagement_asc" %}selected{% endif %}>Engagement (Low &rarr; High)</option>
+                    <option value="engagement_desc" {% if selected_sort == "engagement_desc" %}selected{% endif %}>Engagement (High &rarr; Low)</option>
+                    <option value="student_name" {% if selected_sort == "student_name" %}selected{% endif %}>Student Name</option>
+                </select>
+            </div>
+
+            <!-- Form Buttons -->
+            <div class="col-md-1 col-sm-6 d-flex gap-2">
+                <button type="submit" class="btn btn-primary flex-grow-1 px-0 shadow-sm" title="Apply Filters">
+                    <i class="fa-solid fa-filter"></i>
+                </button>
+                <a href="{% url 'risk_alerts' %}" class="btn btn-secondary flex-grow-1 px-0 d-flex align-items-center justify-content-center shadow-sm" title="Reset Filters">
+                    <i class="fa-solid fa-rotate-left"></i>
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card shadow-sm mb-4 animate-fade-in">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+        <div>
+            <h5 class="card-title mb-0 text-dark fw-bold">
+                <i class="fa-solid fa-bell me-2" style="color: #8A1F1F;"></i>Active Risk Alerts
+                {% if filtered_count > 0 %}
+                    <span class="badge badge-pulse ms-2" style="background-color:rgba(138,31,31,0.1);color:#8A1F1F;border:1px solid rgba(138,31,31,0.2);font-size:0.75rem;border-radius:20px;padding:4px 10px;">Showing {{ filtered_count }} of {{ high_risk_count|add:medium_risk_count }} Pending</span>
+                {% elif high_risk_count|add:medium_risk_count > 0 %}
+                    <span class="badge badge-pulse ms-2" style="background-color:rgba(138,31,31,0.1);color:#8A1F1F;border:1px solid rgba(138,31,31,0.2);font-size:0.75rem;border-radius:20px;padding:4px 10px;">0 of {{ high_risk_count|add:medium_risk_count }} Pending</span>
+                {% endif %}
+            </h5>
+            <p class="text-secondary small mb-0 mt-1">Interventions are recommended for students identified as High or Medium risk by the Random Forest classifier.</p>
+        </div>
+        <a href="{% url 'students_list' %}" class="btn btn-sm btn-outline-secondary shadow-sm">
+            <i class="fa-solid fa-users me-1"></i>All Students
+        </a>
+    </div>
+    
+    <div class="card-body p-0">
+        {% if alerts %}
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle">
+                <thead>
+                    <tr>
+                        <th style="width: 20px;">#</th>
+                        <th>Student</th>
+                        <th>Course</th>
+                        <th class="text-center">Engagement</th>
+                        <th class="text-center">Risk Level</th>
+                        <th>Advisor Recommendation</th>
+                        <th class="text-center">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for alert in alerts %}
+                    <tr style="{% if alert.predicted_risk == 'High Risk' %}border-left: 3px solid #8A1F1F;{% else %}border-left: 3px solid #9E7611;{% endif %}">
+                        <td class="text-secondary small">{{ forloop.counter }}</td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div style="width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.85rem;font-weight:700;background-color:{% if alert.predicted_risk == 'High Risk' %}rgba(138,31,31,0.08){% else %}rgba(158,118,17,0.08){% endif %};color:{% if alert.predicted_risk == 'High Risk' %}#8A1F1F{% else %}#9E7611{% endif %};">
+                                    {{ alert.student.name|first }}
+                                </div>
+                                <div>
+                                    <div class="fw-semibold text-dark">{{ alert.student.name }}</div>
+                                    <small class="text-secondary">{{ alert.student.student_id }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="fw-bold" style="color:var(--cyprus);">{{ alert.course.course_code }}</div>
+                            <small class="text-secondary truncate-course-name">{{ alert.course.course_name }}</small>
+                        </td>
+                        <td class="text-center">
+                            <div class="fw-bold {% if alert.predicted_risk == 'High Risk' %}text-danger{% else %}text-warning{% endif %}" style="font-size:1.1rem;">
+                                {{ alert.engagement_score|floatformat:1 }}%
+                            </div>
+                            <div class="progress mt-1" style="height:4px;width:80px;margin:auto;">
+                                <div class="progress-bar {% if alert.predicted_risk == 'High Risk' %}bg-danger{% else %}bg-warning{% endif %}" style="width:{{ alert.engagement_score }}%;"></div>
+                            </div>
+                        </td>
+                        <td class="text-center">
+                            {% if alert.predicted_risk == 'High Risk' %}
+                                <span class="badge badge-risk-high px-3 py-2"><i class="fa-solid fa-triangle-exclamation me-1"></i>High Risk</span>
+                            {% else %}
+                                <span class="badge badge-risk-medium px-3 py-2"><i class="fa-solid fa-circle-exclamation me-1"></i>Medium Risk</span>
+                            {% endif %}
+                        </td>
+                        <td style="max-width: 300px;">
+                            <div class="p-2 rounded small text-dark" style="background:var(--sand-light);border:1px solid var(--sand-dark);line-height:1.5;">
+                                {{ alert.recommendation }}
+                            </div>
+                        </td>
+                        <td class="text-center">
+                            <a href="{% url 'student_detail' alert.student.id %}" class="btn btn-sm btn-outline-primary px-3 shadow-sm">
+                                <i class="fa-solid fa-user-gear me-1"></i>Intervene
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+            {% if search_query or selected_course or selected_risk or selected_max_engagement %}
+            <div class="text-center py-5 text-secondary">
+                <i class="fa-solid fa-filter-circle-xmark fs-1 text-warning mb-3 opacity-50"></i>
+                <h5 class="text-dark fw-bold">No Alerts Match Your Filters</h5>
+                <p class="mb-3">Try adjusting your search criteria, changing the dropdown options, or reset all active filters.</p>
+                <a href="{% url 'risk_alerts' %}" class="btn btn-sm btn-primary px-3 shadow-sm">
+                    <i class="fa-solid fa-rotate-left me-1"></i>Reset All Filters
+                </a>
+            </div>
+            {% else %}
+            <div class="text-center py-5 text-secondary">
+                <i class="fa-solid fa-shield-halved fs-1 text-success mb-3 opacity-50"></i>
+                <h5 class="text-dark fw-bold">All Clear! No Active Risk Alerts</h5>
+                <p class="mb-0">Students are currently maintaining healthy engagement levels across all enrolled courses.</p>
+            </div>
+            {% endif %}
+        {% endif %}
+    </div>
+</div>
+
+
+<style>
+    .truncate-course-name {
+        display: inline-block;
+        max-width: 150px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,504 @@
+/* CSS Design System based on Cyprus (#004643) and Sand (#F0EDE5) */
+
+:root {
+    --cyprus: #004643;
+    --cyprus-dark: #003330;
+    --cyprus-light: #0d5f5a;
+    --cyprus-trans: rgba(0, 70, 67, 0.1);
+    --sand: #F0EDE5;
+    --sand-dark: #d5cfc1;
+    --sand-light: #f7f6f3;
+    --body-bg: #FAF8F5;
+    --text-primary: #0a221f;
+    --text-secondary: #5e6b69;
+    --accent: #E0A96D; /* Warm accent for high contrast highlights */
+    --card-shadow: 0 4px 20px rgba(0, 70, 67, 0.05);
+    --hover-shadow: 0 10px 30px rgba(0, 70, 67, 0.12);
+    --border-radius: 12px;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--body-bg);
+    color: var(--text-primary);
+    overflow-x: hidden;
+}
+
+h1, h2, h3, h4, h5, h6, .logo-text, .page-title {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 600;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: var(--sand-light);
+}
+::-webkit-scrollbar-thumb {
+    background: var(--cyprus-light);
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--cyprus);
+}
+
+/* Sidebar Styling */
+#sidebar-wrapper {
+    min-height: 100vh;
+    width: 260px;
+    background-color: var(--cyprus);
+    color: var(--sand);
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    z-index: 1000;
+    box-shadow: 2px 0 20px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar-heading {
+    padding: 24px;
+    border-bottom: 1px solid rgba(240, 237, 229, 0.1);
+}
+
+.logo-text {
+    font-size: 1.25rem;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    color: var(--sand);
+}
+
+.text-accent {
+    color: var(--accent);
+}
+
+.user-profile-section {
+    border-bottom: 1px solid rgba(240, 237, 229, 0.1);
+}
+
+.user-avatar {
+    color: var(--sand);
+    opacity: 0.9;
+}
+
+.role-badge {
+    background-color: rgba(240, 237, 229, 0.15);
+    color: var(--sand);
+    padding: 2px 8px;
+    border-radius: 30px;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+}
+
+.truncate-text {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 140px;
+}
+
+.sidebar-section-header {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: rgba(240, 237, 229, 0.4);
+    letter-spacing: 1px;
+}
+
+/* Sidebar nav links */
+#sidebar-wrapper .list-group {
+    flex-grow: 1;
+}
+
+#sidebar-wrapper .list-group-item {
+    background-color: transparent;
+    color: var(--sand);
+    border: none;
+    padding: 12px 18px;
+    margin-bottom: 4px;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+}
+
+#sidebar-wrapper .list-group-item i {
+    width: 24px;
+    font-size: 1.1rem;
+    opacity: 0.8;
+}
+
+#sidebar-wrapper .list-group-item:hover {
+    background-color: rgba(240, 237, 229, 0.1);
+    color: #fff;
+    padding-left: 22px;
+}
+
+#sidebar-wrapper .list-group-item.active {
+    background-color: var(--sand);
+    color: var(--cyprus);
+    font-weight: 600;
+}
+
+#sidebar-wrapper .list-group-item.active i {
+    color: var(--cyprus);
+    opacity: 1;
+}
+
+/* Sidebar footer pinned to bottom */
+.sidebar-footer {
+    margin-top: auto;
+    border-top: 1px solid rgba(240, 237, 229, 0.1);
+}
+
+/* Page Layout */
+#page-content-wrapper {
+    min-height: 100vh;
+    background-color: var(--body-bg);
+}
+
+.page-title {
+    color: var(--cyprus);
+    font-weight: 700;
+}
+
+/* Sidebar Toggle Mechanics */
+#wrapper.toggled #sidebar-wrapper {
+    margin-left: -260px;
+}
+
+@media (min-width: 992px) {
+    #wrapper.toggled #sidebar-wrapper {
+        margin-left: -260px;
+    }
+}
+
+@media (max-width: 991px) {
+    #sidebar-wrapper {
+        margin-left: -260px;
+    }
+    #wrapper.toggled #sidebar-wrapper {
+        margin-left: 0;
+    }
+}
+
+/* Premium Dashboard Cards */
+.card {
+    background-color: #ffffff;
+    border: 1px solid rgba(0, 70, 67, 0.06);
+    border-radius: var(--border-radius);
+    box-shadow: var(--card-shadow);
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    box-shadow: var(--hover-shadow);
+    transform: translateY(-2px);
+}
+
+.card-header {
+    background-color: #ffffff;
+    border-bottom: 1px solid rgba(0, 70, 67, 0.06);
+    padding: 16px 20px;
+    font-weight: 600;
+    color: var(--cyprus);
+}
+
+.metric-card {
+    position: relative;
+    overflow: hidden;
+}
+
+.metric-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background-color: var(--cyprus);
+}
+
+.metric-icon-bg {
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--cyprus-trans);
+    color: var(--cyprus);
+    font-size: 1.25rem;
+    transition: transform 0.3s ease;
+}
+
+.metric-card:hover .metric-icon-bg {
+    transform: scale(1.1) rotate(-5deg);
+}
+
+/* Premium Buttons */
+.btn-primary {
+    background-color: var(--cyprus);
+    border-color: var(--cyprus);
+    color: var(--sand);
+    font-weight: 550;
+    padding: 8px 16px;
+    border-radius: 8px;
+    transition: all 0.25s ease;
+}
+
+.btn-primary:hover, .btn-primary:focus {
+    background-color: var(--cyprus-dark);
+    border-color: var(--cyprus-dark);
+    color: #fff;
+    transform: translateY(-1px);
+}
+
+.btn-outline-primary {
+    color: var(--cyprus);
+    border-color: var(--cyprus);
+    font-weight: 550;
+    border-radius: 8px;
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--cyprus);
+    border-color: var(--cyprus);
+    color: var(--sand);
+}
+
+.btn-secondary {
+    background-color: var(--sand);
+    border-color: var(--sand-dark);
+    color: var(--cyprus);
+    font-weight: 550;
+}
+
+.btn-secondary:hover {
+    background-color: var(--sand-dark);
+    color: var(--cyprus-dark);
+}
+
+/* Badges for Risk Levels */
+.badge-risk-high {
+    background-color: rgba(138, 31, 31, 0.1);
+    color: #8A1F1F;
+    border: 1px solid rgba(138, 31, 31, 0.2);
+    border-radius: 20px;
+    font-weight: 600;
+}
+
+.badge-risk-medium {
+    background-color: rgba(158, 118, 17, 0.1);
+    color: #9E7611;
+    border: 1px solid rgba(158, 118, 17, 0.2);
+    border-radius: 20px;
+    font-weight: 600;
+}
+
+.badge-risk-low {
+    background-color: rgba(30, 92, 59, 0.1);
+    color: #1E5C3B;
+    border: 1px solid rgba(30, 92, 59, 0.2);
+    border-radius: 20px;
+    font-weight: 600;
+}
+
+/* Missing utility class used in templates */
+.font-size-xs {
+    font-size: 0.75rem !important;
+}
+
+/* Tables styling */
+.table {
+    vertical-align: middle;
+}
+
+.table th {
+    background-color: var(--sand-light);
+    color: var(--cyprus);
+    font-weight: 600;
+    border-bottom: 2px solid var(--sand-dark);
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    letter-spacing: 0.5px;
+    padding: 12px 16px;
+}
+
+.table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--sand);
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(0, 70, 67, 0.025);
+    cursor: pointer;
+}
+
+/* Form controls */
+.form-control:focus, .form-select:focus {
+    border-color: var(--cyprus);
+    box-shadow: 0 0 0 0.2rem rgba(0, 70, 67, 0.15);
+}
+
+.form-control, .form-select {
+    border-radius: 8px;
+    border-color: var(--sand-dark);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Input Group styling */
+.input-group-text {
+    border-radius: 8px 0 0 8px;
+    border-color: var(--sand-dark);
+}
+
+/* Login/Registration Card Design */
+.auth-bg {
+    background: linear-gradient(135deg, var(--cyprus) 0%, var(--cyprus-dark) 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.auth-bg::before {
+    content: '';
+    position: fixed;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle at 30% 50%, rgba(224, 169, 109, 0.06) 0%, transparent 50%),
+                radial-gradient(circle at 70% 20%, rgba(240, 237, 229, 0.04) 0%, transparent 50%);
+    pointer-events: none;
+}
+
+.auth-card {
+    border-radius: var(--border-radius);
+    border: none;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    max-width: 450px;
+    width: 100%;
+}
+
+.auth-header {
+    background-color: var(--cyprus-dark);
+    color: var(--sand);
+    padding: 30px;
+    text-align: center;
+    border-bottom: 3px solid var(--accent);
+}
+
+.auth-body {
+    padding: 40px 30px;
+    background-color: #ffffff;
+}
+
+/* Utility and Micro details */
+.alert {
+    border-radius: 8px;
+    border: none;
+}
+
+.alert-success {
+    background-color: rgba(30, 92, 59, 0.1);
+    color: #1E5C3B;
+    border-left: 4px solid #1E5C3B;
+}
+
+.alert-danger, .alert-error {
+    background-color: rgba(138, 31, 31, 0.1);
+    color: #8A1F1F;
+    border-left: 4px solid #8A1F1F;
+}
+
+.alert-warning {
+    background-color: rgba(158, 118, 17, 0.1);
+    color: #9E7611;
+    border-left: 4px solid #9E7611;
+}
+
+.alert-info {
+    background-color: var(--cyprus-trans);
+    color: var(--cyprus);
+    border-left: 4px solid var(--cyprus);
+}
+
+.progress-bar-fill {
+    height: 8px;
+    border-radius: 10px;
+    background-color: var(--cyprus);
+}
+
+/* Animated progress bars on page load */
+.progress-bar {
+    transition: width 1s ease-in-out;
+}
+
+/* Navbar styling */
+.navbar {
+    box-shadow: 0 2px 10px rgba(0, 70, 67, 0.05);
+}
+
+/* Dropdown menu */
+.dropdown-menu {
+    border: 1px solid rgba(0, 70, 67, 0.1);
+    border-radius: 10px;
+    box-shadow: 0 8px 20px rgba(0, 70, 67, 0.1);
+}
+
+.dropdown-item:hover {
+    background-color: var(--sand-light);
+    color: var(--cyprus);
+}
+
+/* Badge override for role */
+.badge.bg-primary {
+    background-color: var(--cyprus) !important;
+}
+
+/* Pulse animation for alert count badge */
+@keyframes pulse-badge {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+}
+
+.badge-pulse {
+    animation: pulse-badge 2s ease-in-out infinite;
+}
+
+/* Animation triggers */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInLeft {
+    from { opacity: 0; transform: translateX(-20px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.4s ease forwards;
+}
+
+.animate-slide-in {
+    animation: slideInLeft 0.4s ease forwards;
+}
+
+/* Staggered list items */
+.table tbody tr {
+    animation: fadeIn 0.3s ease both;
+}
+
+/* Card hover lift effect override for stat cards */
+.metric-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 35px rgba(0, 70, 67, 0.15);
+}

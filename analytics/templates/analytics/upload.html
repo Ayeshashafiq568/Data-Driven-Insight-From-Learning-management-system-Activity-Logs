@@ -1,0 +1,106 @@
+{% extends 'analytics/base.html' %}
+
+{% block title %}Upload LMS Activity Logs - LMS Insights{% endblock %}
+{% block page_title %}Upload LMS Activity Logs{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-white py-3">
+                <h5 class="card-title mb-0 text-dark fw-bold">Select CSV File</h5>
+            </div>
+            <div class="card-body p-4">
+                <p class="text-secondary mb-4">Upload raw LMS activity logs in CSV format. The data will be parsed, stored in the SQLite database, and automatically processed by the Random Forest classifier to compute engagement and predict risk levels.</p>
+                
+                <form method="POST" enctype="multipart/form-data" class="mb-3">
+                    {% csrf_token %}
+                    
+                    <div class="mb-4">
+                        {{ form.csv_file.label_tag }}
+                        {{ form.csv_file }}
+                        {% if form.csv_file.errors %}
+                            {% for error in form.csv_file.errors %}
+                                <div class="text-danger mt-1 small"><i class="fa-solid fa-circle-exclamation me-1"></i>{{ error }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary px-4 py-2">
+                        <i class="fa-solid fa-cloud-arrow-up me-2"></i>Upload and Process Logs
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm" style="background-color: var(--sand-light); border-left: 5px solid var(--cyprus) !important;">
+            <div class="card-body p-4">
+                <h6 class="fw-bold text-dark mb-3"><i class="fa-solid fa-circle-info me-2 text-primary"></i>CSV Format Guidelines</h6>
+                <p class="text-secondary small">Your CSV file must contain the following columns exactly as written (case-sensitive):</p>
+                <div class="table-responsive">
+                    <table class="table table-sm table-bordered bg-white text-secondary small">
+                        <thead>
+                            <tr class="table-light">
+                                <th>Column Name</th>
+                                <th>Data Type</th>
+                                <th>Description</th>
+                                <th>Example</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>student_id</code></td>
+                                <td>Text</td>
+                                <td>Unique identifier for the student</td>
+                                <td>STU10842</td>
+                            </tr>
+                            <tr>
+                                <td><code>student_name</code></td>
+                                <td>Text</td>
+                                <td>Full name of the student</td>
+                                <td>Ayesha Shafiq</td>
+                            </tr>
+                            <tr>
+                                <td><code>student_email</code></td>
+                                <td>Email</td>
+                                <td>Email address</td>
+                                <td>ayesha@university.edu</td>
+                            </tr>
+                            <tr>
+                                <td><code>course_code</code></td>
+                                <td>Text</td>
+                                <td>Unique code of the course</td>
+                                <td>CS101</td>
+                            </tr>
+                            <tr>
+                                <td><code>course_name</code></td>
+                                <td>Text</td>
+                                <td>Full title of the course</td>
+                                <td>Intro to Computer Science</td>
+                            </tr>
+                            <tr>
+                                <td><code>timestamp</code></td>
+                                <td>DateTime</td>
+                                <td>Date & time of activity (<code>YYYY-MM-DD HH:MM:SS</code>)</td>
+                                <td>2026-06-02 14:32:05</td>
+                            </tr>
+                            <tr>
+                                <td><code>action</code></td>
+                                <td>Text</td>
+                                <td>Action performed (<code>submit_quiz</code>, <code>post_forum</code>, <code>access_resource</code>)</td>
+                                <td>submit_quiz</td>
+                            </tr>
+                            <tr>
+                                <td><code>duration</code></td>
+                                <td>Integer</td>
+                                <td>Time spent in seconds</td>
+                                <td>1800</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

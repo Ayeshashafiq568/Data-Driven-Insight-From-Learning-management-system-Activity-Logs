@@ -1,0 +1,150 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}LMS Insights{% endblock %}</title>
+    <!-- Google Fonts: Outfit & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome for Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Custom Style -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="d-flex" id="wrapper">
+        <!-- Sidebar -->
+        <div id="sidebar-wrapper">
+            <div class="sidebar-heading d-flex align-items-center justify-content-center gap-2">
+                <i class="fa-solid fa-graduation-cap fs-4 text-accent"></i>
+                <span class="logo-text">LMS Insights</span>
+            </div>
+            
+            <div class="user-profile-section p-3 d-flex align-items-center gap-3">
+                <div class="user-avatar">
+                    <i class="fa-solid fa-user-circle fs-2"></i>
+                </div>
+                <div class="user-info">
+                    <h6 class="mb-0 text-white truncate-text">{{ user.username }}</h6>
+                    <small class="role-badge">{{ user.get_role_display }}</small>
+                </div>
+            </div>
+
+            <div class="list-group list-group-flush px-3">
+                <a href="{% url 'dashboard' %}" class="list-group-item list-group-item-action {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                    <i class="fa-solid fa-chart-pie me-2"></i>Dashboard
+                </a>
+                
+                {% if user.is_admin or user.is_instructor or user.is_advisor %}
+                <a href="{% url 'courses_list' %}" class="list-group-item list-group-item-action {% if 'course' in request.path %}active{% endif %}">
+                    <i class="fa-solid fa-book me-2"></i>Course Analytics
+                </a>
+                <a href="{% url 'students_list' %}" class="list-group-item list-group-item-action {% if 'student' in request.path %}active{% endif %}">
+                    <i class="fa-solid fa-users me-2"></i>Student Directory
+                </a>
+                {% endif %}
+
+                {% if user.is_admin or user.is_advisor %}
+                <a href="{% url 'risk_alerts' %}" class="list-group-item list-group-item-action {% if request.resolver_match.url_name == 'risk_alerts' %}active{% endif %}">
+                    <i class="fa-solid fa-triangle-exclamation me-2"></i>Risk Alerts
+                </a>
+                {% endif %}
+
+                {% if user.is_admin %}
+                <div class="sidebar-section-header text-uppercase mt-4 mb-2 px-3">Admin Actions</div>
+                <a href="{% url 'upload_csv' %}" class="list-group-item list-group-item-action {% if request.resolver_match.url_name == 'upload_csv' %}active{% endif %}">
+                    <i class="fa-solid fa-cloud-arrow-up me-2"></i>Upload Logs
+                </a>
+                <a href="{% url 'manage_users' %}" class="list-group-item list-group-item-action {% if 'user' in request.path %}active{% endif %}">
+                    <i class="fa-solid fa-user-gear me-2"></i>User Management
+                </a>
+                {% endif %}
+            </div>
+            
+            <div class="sidebar-footer p-3 mt-auto">
+                <a href="{% url 'logout' %}" class="btn btn-outline-light w-100 btn-sm">
+                    <i class="fa-solid fa-right-from-bracket me-2"></i>Logout
+                </a>
+            </div>
+        </div>
+        <!-- /#sidebar-wrapper -->
+
+        <!-- Page Content -->
+        <div id="page-content-wrapper" class="w-100">
+            <!-- Navbar -->
+            <nav class="navbar navbar-expand-lg navbar-light bg-white px-4 border-bottom py-3">
+                <div class="container-fluid p-0">
+                    <button class="btn btn-link text-dark p-0 me-3" id="menu-toggle">
+                        <i class="fa-solid fa-bars fs-5"></i>
+                    </button>
+                    
+                    <h5 class="mb-0 page-title">{% block page_title %}Dashboard{% endblock %}</h5>
+                    
+                    <div class="ms-auto d-flex align-items-center gap-3">
+                        {% if user.is_admin or user.is_instructor or user.is_advisor %}
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fa-solid fa-download me-1"></i> Export Report
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="exportDropdown">
+                                <li><a class="dropdown-item" href="{% url 'export_pdf' %}"><i class="fa-regular fa-file-pdf me-2 text-danger"></i>PDF Format</a></li>
+                                <li><a class="dropdown-item" href="{% url 'export_excel' %}"><i class="fa-regular fa-file-excel me-2 text-success"></i>Excel Format</a></li>
+                            </ul>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="text-end d-none d-sm-block">
+                            <span class="d-block fw-semibold text-dark">{{ user.username }}</span>
+                            <span class="badge bg-light text-dark border text-uppercase font-size-xs">{{ user.role }}</span>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+
+            <!-- Main Content Container -->
+            <div class="container-fluid p-4">
+                <!-- Notifications Alert Block -->
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm" role="alert">
+                            {% if message.tags == 'success' %}
+                                <i class="fa-solid fa-circle-check me-2"></i>
+                            {% elif message.tags == 'error' %}
+                                <i class="fa-solid fa-triangle-exclamation me-2"></i>
+                            {% else %}
+                                <i class="fa-solid fa-circle-info me-2"></i>
+                            {% endif %}
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                {% block content %}{% endblock %}
+            </div>
+        </div>
+        <!-- /#page-content-wrapper -->
+    </div>
+    <!-- /#wrapper -->
+
+    <!-- Bootstrap Bundle with Popper JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Core Sidebar Script -->
+    <script>
+        document.getElementById("menu-toggle").addEventListener("click", function(e) {
+            e.preventDefault();
+            document.getElementById("wrapper").classList.toggle("toggled");
+        });
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

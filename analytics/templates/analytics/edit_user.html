@@ -1,0 +1,63 @@
+{% extends 'analytics/base.html' %}
+
+{% block title %}Edit User - LMS Insights{% endblock %}
+{% block page_title %}Edit User Configuration{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card shadow-sm">
+            <div class="card-header bg-white py-3">
+                <h5 class="card-title mb-0 text-dark fw-bold">Configure User: {{ user_to_edit.username }}</h5>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Username</label>
+                        <input type="text" class="form-control" value="{{ user_to_edit.username }}" disabled>
+                        <small class="text-muted">Username cannot be changed.</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="id_email" class="form-label fw-medium">Email Address</label>
+                        {{ form.email }}
+                        {% if form.email.errors %}
+                            {% for error in form.email.errors %}
+                                <div class="text-danger small mt-1">{{ error }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="id_role" class="form-label fw-medium">Access Role</label>
+                        {{ form.role }}
+                        {% if form.role.errors %}
+                            {% for error in form.role.errors %}
+                                <div class="text-danger small mt-1">{{ error }}</div>
+                            {% endfor %}
+                        {% endif %}
+                        <small class="text-muted d-block mt-1">Select the role to define the user's dashboard view and privileges.</small>
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="form-check form-switch">
+                            {{ form.is_active }}
+                            <label class="form-check-label fw-medium" for="id_is_active">User Account Active</label>
+                        </div>
+                        <small class="text-muted d-block mt-1">If disabled, this user will be blocked from logging into the dashboard.</small>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary px-4">
+                            <i class="fa-solid fa-save me-2"></i>Save Changes
+                        </button>
+                        <a href="{% url 'manage_users' %}" class="btn btn-secondary px-4">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

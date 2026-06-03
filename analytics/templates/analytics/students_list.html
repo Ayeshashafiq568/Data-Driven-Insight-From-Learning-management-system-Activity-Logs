@@ -1,0 +1,94 @@
+{% extends 'analytics/base.html' %}
+
+{% block title %}Student Directory - LMS Insights{% endblock %}
+{% block page_title %}Student Directory{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-white py-3">
+        <div class="row align-items-center g-3">
+            <div class="col-md-6">
+                <h5 class="card-title mb-0 text-dark fw-bold">Enrolled Students</h5>
+            </div>
+            <div class="col-md-6">
+                <!-- Search Form -->
+                <form method="GET" action="{% url 'students_list' %}" class="d-flex gap-2">
+                    <div class="input-group">
+                        <span class="input-group-text bg-light text-secondary border-end-0">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </span>
+                        <input type="text" name="search" class="form-control border-start-0 bg-light" placeholder="Search by name or Student ID..." value="{{ query }}">
+                    </div>
+                    <button type="submit" class="btn btn-primary px-3">Search</button>
+                    {% if query %}
+                        <a href="{% url 'students_list' %}" class="btn btn-secondary px-3">Clear</a>
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card-body p-0">
+        {% if students %}
+        <div class="table-responsive">
+            <table class="table mb-0 align-middle">
+                <thead>
+                    <tr>
+                        <th>Student ID</th>
+                        <th>Student Name</th>
+                        <th>Email Address</th>
+                        <th class="text-center">Enrolled Courses</th>
+                        <th class="text-center">Overall Avg Engagement</th>
+                        <th class="text-center">Risk Warning</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in students %}
+                    <tr>
+                        <td><span class="fw-bold text-dark">{{ s.student_id }}</span></td>
+                        <td><span class="fw-semibold text-dark">{{ s.name }}</span></td>
+                        <td>{{ s.email }}</td>
+                        <td class="text-center fw-semibold text-dark">{{ s.courses_count }}</td>
+                        <td class="text-center">
+                            {% if s.avg_score %}
+                                <span class="fw-bold {% if s.avg_score < 35 %}text-danger{% elif s.avg_score < 70 %}text-warning{% else %}text-success{% endif %}">
+                                    {{ s.avg_score|floatformat:1 }}%
+                                </span>
+                            {% else %}
+                                <span class="text-muted">N/A</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if s.avg_score %}
+                                {% if s.avg_score < 35 %}
+                                    <span class="badge bg-danger-subtle text-danger-emphasis"><i class="fa-solid fa-triangle-exclamation me-1"></i>High Risk Alert</span>
+                                {% elif s.avg_score < 70 %}
+                                    <span class="badge bg-warning-subtle text-warning-emphasis"><i class="fa-solid fa-triangle-exclamation me-1"></i>Medium Risk</span>
+                                {% else %}
+                                    <span class="badge bg-success-subtle text-success-emphasis"><i class="fa-solid fa-circle-check me-1"></i>Low Risk</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="badge bg-light text-dark border">No Data</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            <a href="{% url 'student_detail' s.id %}" class="btn btn-sm btn-outline-primary px-3">
+                                <i class="fa-regular fa-eye me-1"></i>View Profile
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5 text-secondary">
+            <i class="fa-solid fa-users-viewfinder fs-1 mb-3 opacity-50"></i>
+            <h5>No students found.</h5>
+            <p>Try searching another term, or verify that LMS log data has been uploaded.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

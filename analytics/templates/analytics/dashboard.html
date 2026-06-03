@@ -1,0 +1,393 @@
+{% extends 'analytics/base.html' %}
+{% load static %}
+
+{% block title %}Dashboard - LMS Insights{% endblock %}
+{% block page_title %}Workspace Dashboard{% endblock %}
+
+{% block content %}
+<div class="row g-4 mb-4">
+    <!-- Stat Card 1: Total Students -->
+    <div class="col-xl-3 col-md-6">
+        <div class="card metric-card p-3">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <h6 class="text-uppercase text-secondary mb-1" style="font-size: 0.75rem; font-weight: 700;">Total Students</h6>
+                    <h3 class="mb-0 fw-bold">{{ total_students }}</h3>
+                </div>
+                <div class="metric-icon-bg">
+                    <i class="fa-solid fa-user-graduate"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Stat Card 2: Total Courses -->
+    <div class="col-xl-3 col-md-6">
+        <div class="card metric-card p-3" style="--cyprus: #0d5f5a;">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <h6 class="text-uppercase text-secondary mb-1" style="font-size: 0.75rem; font-weight: 700;">Total Courses</h6>
+                    <h3 class="mb-0 fw-bold">{{ total_courses }}</h3>
+                </div>
+                <div class="metric-icon-bg" style="background-color: rgba(13, 95, 90, 0.1); color: #0d5f5a;">
+                    <i class="fa-solid fa-book-open"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Stat Card 3: Total Logs -->
+    <div class="col-xl-3 col-md-6">
+        <div class="card metric-card p-3" style="--cyprus: #E0A96D;">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <h6 class="text-uppercase text-secondary mb-1" style="font-size: 0.75rem; font-weight: 700;">Activity Logs</h6>
+                    <h3 class="mb-0 fw-bold">{{ total_logs }}</h3>
+                </div>
+                <div class="metric-icon-bg" style="background-color: rgba(224, 169, 109, 0.1); color: #E0A96D;">
+                    <i class="fa-solid fa-list-check"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Stat Card 4: Predictions -->
+    <div class="col-xl-3 col-md-6">
+        <div class="card metric-card p-3" style="--cyprus: #003330;">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <h6 class="text-uppercase text-secondary mb-1" style="font-size: 0.75rem; font-weight: 700;">ML Risk Analysis</h6>
+                    <h3 class="mb-0 fw-bold">{{ total_predictions }}</h3>
+                </div>
+                <div class="metric-icon-bg" style="background-color: rgba(0, 51, 48, 0.1); color: #003330;">
+                    <i class="fa-solid fa-brain"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if total_logs == 0 %}
+<div class="card p-5 text-center my-5 shadow-sm">
+    <div class="py-4">
+        <i class="fa-solid fa-database fs-1 text-secondary opacity-50 mb-3"></i>
+        <h4 class="text-dark">No LMS Activity Logs Found</h4>
+        <p class="text-secondary max-width-500 mx-auto">To populate the dashboard metrics, charts, and trigger the Machine Learning pipeline, please upload an LMS activity logs CSV dataset.</p>
+        {% if user.is_admin %}
+            <a href="{% url 'upload_csv' %}" class="btn btn-primary mt-3">
+                <i class="fa-solid fa-cloud-arrow-up me-2"></i>Upload Sample Logs (CSV)
+            </a>
+        {% else %}
+            <div class="alert alert-warning d-inline-block mt-3">
+                <i class="fa-solid fa-circle-exclamation me-2"></i>Please contact an Administrator to upload activity logs.
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% else %}
+
+<div class="row g-4 mb-4">
+    <!-- Risk Distribution Doughnut Chart -->
+    <div class="col-xl-4 col-lg-5">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>Student Risk Distribution</span>
+                <i class="fa-solid fa-chart-pie text-secondary"></i>
+            </div>
+            <div class="card-body d-flex flex-column justify-content-center align-items-center">
+                <div style="width: 100%; max-width: 250px; height: 250px; position: relative;">
+                    <canvas id="riskChart"></canvas>
+                </div>
+                <div class="w-100 mt-4 d-flex justify-content-around text-center" style="font-size: 0.85rem;">
+                    <div>
+                        <span class="d-block fw-bold text-success">{{ risk_data.low }}</span>
+                        <span class="text-secondary">Low Risk</span>
+                    </div>
+                    <div class="border-start border-end px-3">
+                        <span class="d-block fw-bold text-warning">{{ risk_data.medium }}</span>
+                        <span class="text-secondary">Medium Risk</span>
+                    </div>
+                    <div>
+                        <span class="d-block fw-bold text-danger">{{ risk_data.high }}</span>
+                        <span class="text-secondary">High Risk</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Engagement Trends Line Chart -->
+    <div class="col-xl-8 col-lg-7">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>Engagement Trends (Logs volume over time)</span>
+                <i class="fa-solid fa-chart-line text-secondary"></i>
+            </div>
+            <div class="card-body">
+                <div style="width: 100%; height: 260px;">
+                    <canvas id="trendsChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- Course Performance Chart -->
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>Course Engagement Levels (Top 5)</span>
+                <i class="fa-solid fa-chart-column text-secondary"></i>
+            </div>
+            <div class="card-body">
+                <div style="width: 100%; height: 260px;">
+                    <canvas id="courseChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- At-Risk Students Summary -->
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span class="text-danger fw-bold"><i class="fa-solid fa-triangle-exclamation me-2"></i>Immediate Action Needed (High Risk)</span>
+                <a href="{% url 'risk_alerts' %}" class="btn btn-sm btn-outline-danger">View Alerts</a>
+            </div>
+            <div class="card-body p-0">
+                {% if at_risk_predictions %}
+                <div class="table-responsive">
+                    <table class="table mb-0 align-middle">
+                        <thead>
+                            <tr>
+                                <th>Student</th>
+                                <th>Course</th>
+                                <th>Score</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for p in at_risk_predictions %}
+                            <tr>
+                                <td>
+                                    <div class="fw-semibold">{{ p.student.name }}</div>
+                                    <small class="text-secondary">{{ p.student.student_id }}</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-dark border">{{ p.course.course_code }}</span>
+                                </td>
+                                <td>
+                                    <div class="fw-bold text-danger">{{ p.engagement_score }}%</div>
+                                </td>
+                                <td>
+                                    <a href="{% url 'student_detail' p.student.id %}" class="btn btn-sm btn-outline-primary py-0.5 px-2">
+                                        <i class="fa-regular fa-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5 text-secondary">
+                    <i class="fa-regular fa-circle-check fs-2 text-success mb-2"></i>
+                    <p class="mb-0">Excellent! No high-risk student alerts currently recorded.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span>Recent LMS Log Streaming Activities</span>
+        <i class="fa-solid fa-list-ul text-secondary"></i>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table mb-0 align-middle">
+                <thead>
+                    <tr>
+                        <th>Student ID</th>
+                        <th>Name</th>
+                        <th>Course Code</th>
+                        <th>Action</th>
+                        <th>Duration (min)</th>
+                        <th>Timestamp</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in recent_logs %}
+                    <tr>
+                        <td><span class="fw-medium text-dark">{{ log.student.student_id }}</span></td>
+                        <td>{{ log.student.name }}</td>
+                        <td><span class="badge bg-secondary-subtle text-secondary-emphasis">{{ log.course.course_code }}</span></td>
+                        <td>
+                            {% if log.action == 'submit_quiz' %}
+                                <span class="badge bg-success-subtle text-success-emphasis"><i class="fa-solid fa-circle-check me-1"></i>Quiz Submit</span>
+                            {% elif log.action == 'post_forum' %}
+                                <span class="badge bg-info-subtle text-info-emphasis"><i class="fa-solid fa-comment-dots me-1"></i>Forum Post</span>
+                            {% elif log.action == 'access_resource' %}
+                                <span class="badge bg-primary-subtle text-primary-emphasis"><i class="fa-solid fa-book-open-reader me-1"></i>Resource View</span>
+                            {% else %}
+                                <span class="badge bg-light text-dark border">{{ log.action }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% widthratio log.duration 60 1 %} min
+                        </td>
+                        <td><small class="text-secondary">{{ log.timestamp|date:"Y-m-d H:i" }}</small></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{% if total_logs > 0 %}
+<script>
+    // 1. Risk Doughnut Chart
+    var ctxRisk = document.getElementById('riskChart').getContext('2d');
+    var riskChart = new Chart(ctxRisk, {
+        type: 'doughnut',
+        data: {
+            labels: ['Low Risk', 'Medium Risk', 'High Risk'],
+            datasets: [{
+                data: [
+                    {{ risk_data.low|default:0 }},
+                    {{ risk_data.medium|default:0 }},
+                    {{ risk_data.high|default:0 }}
+                ],
+                backgroundColor: ['#1E5C3B', '#9E7611', '#8A1F1F'],
+                borderWidth: 2,
+                borderColor: '#ffffff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            cutout: '70%'
+        }
+    });
+
+    // 2. Trends Line Chart
+    var ctxTrends = document.getElementById('trendsChart').getContext('2d');
+    var trendsChart = new Chart(ctxTrends, {
+        type: 'line',
+        data: {
+            labels: {{ trend_labels|safe }},
+            datasets: [{
+                label: 'Activity Logs',
+                data: {{ trend_counts|safe }},
+                borderColor: '#004643',
+                backgroundColor: 'rgba(0, 70, 67, 0.05)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.3,
+                pointBackgroundColor: '#E0A96D',
+                pointBorderColor: '#ffffff',
+                pointHoverRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        color: '#5e6b69',
+                        font: {
+                            family: 'Inter'
+                        }
+                    }
+                },
+                y: {
+                    grid: {
+                        color: '#f0ede5'
+                    },
+                    ticks: {
+                        color: '#5e6b69',
+                        font: {
+                            family: 'Inter'
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // 3. Course Bar Chart
+    var ctxCourse = document.getElementById('courseChart').getContext('2d');
+    var courseChart = new Chart(ctxCourse, {
+        type: 'bar',
+        data: {
+            labels: {{ course_labels|safe }},
+            datasets: [{
+                label: 'Avg Engagement Score (%)',
+                data: {{ course_scores|safe }},
+                backgroundColor: '#0d5f5a',
+                hoverBackgroundColor: '#004643',
+                borderRadius: 6,
+                barPercentage: 0.6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        color: '#5e6b69',
+                        font: {
+                            family: 'Inter'
+                        }
+                    }
+                },
+                y: {
+                    min: 0,
+                    max: 100,
+                    grid: {
+                        color: '#f0ede5'
+                    },
+                    ticks: {
+                        color: '#5e6b69',
+                        font: {
+                            family: 'Inter'
+                        }
+                    }
+                }
+            }
+        }
+    });
+</script>
+{% endif %}
+{% endblock %}
