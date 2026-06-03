@@ -58,9 +58,18 @@ WSGI_APPLICATION = 'lms_insights.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/stable/ref/settings/#databases
-# Use dj-database-url to parse DATABASE_URL environment variable
-# Falls back to SQLite locally for development
-if os.environ.get('DATABASE_URL'):
+# Use Supabase PostgreSQL in production, SQLite locally
+if os.environ.get('POSTGRES_URL'):
+    # Use Supabase connection with connection pooling
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=os.environ.get('POSTGRES_URL'),
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
+    }
+elif os.environ.get('DATABASE_URL'):
+    # Alternative: Generic DATABASE_URL support
     DATABASES = {
         'default': dj_database_url.config(
             default=os.environ.get('DATABASE_URL'),
@@ -69,6 +78,7 @@ if os.environ.get('DATABASE_URL'):
         )
     }
 else:
+    # Development: SQLite
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
