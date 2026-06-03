@@ -5,12 +5,13 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-m&!z*)#e%r7s@m0*k0*&s)v(3r_f(95j8r!x-6p^$n5%g7z%*1'
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-m&!z*)#e%r7s@m0*k0*&s)v(3r_f(95j8r!x-6p^$n5%g7z%*1')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = ['*']
+# In production, set ALLOWED_HOSTS from environment
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
 # Application definition
 INSTALLED_APPS = [
@@ -25,6 +26,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -96,6 +98,9 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'analytics', 'static'),
 ]
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+# WhiteNoise settings for serving static files efficiently
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Media files (for CSV uploads)
 MEDIA_URL = 'media/'
