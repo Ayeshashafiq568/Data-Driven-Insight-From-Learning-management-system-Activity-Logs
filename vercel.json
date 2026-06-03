@@ -1,11 +1,6 @@
 {
   "buildCommand": "python manage.py collectstatic --noinput",
   "outputDirectory": "staticfiles",
-  "functions": {
-    "api/**/*.py": {
-      "runtime": "python3.11"
-    }
-  },
   "routes": [
     {
       "src": "/static/(.*)",
