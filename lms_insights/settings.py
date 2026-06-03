@@ -66,11 +66,23 @@ WSGI_APPLICATION = 'lms_insights.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/stable/ref/settings/#databases
 # Use Supabase PostgreSQL in production, SQLite locally
-if os.environ.get('POSTGRES_URL'):
-    # Use Supabase connection with connection pooling
+postgres_url_non_pooling = os.environ.get('POSTGRES_URL_NON_POOLING')
+postgres_url = os.environ.get('POSTGRES_URL')
+
+if postgres_url_non_pooling:
+    # Prefer non-pooling URL for Django (pooling is for serverless)
     DATABASES = {
         'default': dj_database_url.config(
-            default=os.environ.get('POSTGRES_URL'),
+            default=postgres_url_non_pooling,
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
+    }
+elif postgres_url:
+    # Fallback to pooling URL if available
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=postgres_url,
             conn_max_age=600,
             conn_health_checks=True,
         )
@@ -128,12 +140,24 @@ STATICFILES_DIRS = [
 ]
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
+# Ensure staticfiles directory exists for collectstatic / WhiteNoise
+if not os.path.isdir(STATIC_ROOT):
+    os.makedirs(STATIC_ROOT, exist_ok=True)
+
 # WhiteNoise settings for serving static files efficiently
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# Ensure staticfiles directory exists for collectstatic / WhiteNoise
+if not os.path.isdir(STATIC_ROOT):
+    os.makedirs(STATIC_ROOT, exist_ok=True)
 
 # Media files (for CSV uploads)
 MEDIA_URL = 'media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# Ensure media directory exists
+if not os.path.isdir(MEDIA_ROOT):
+    os.makedirs(MEDIA_ROOT, exist_ok=True)
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/stable/ref/settings/#default-auto-field
